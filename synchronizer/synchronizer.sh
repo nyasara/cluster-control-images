@@ -31,7 +31,12 @@ do
     fi
 done
 etcdctl set /synchronizer/ready 1
- 
+
+while [ 1 ]
+do
+    sleep 15
+done
+
 # Loop forever
 while [ 1 ]
 do
