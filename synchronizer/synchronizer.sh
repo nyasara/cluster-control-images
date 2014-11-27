@@ -1,3 +1,5 @@
+#/bin/bash
+
 # Find etcd
 ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
 export ETCDCTL_PEERS
