@@ -26,8 +26,6 @@ do
         echo "version=`cat /srv/core/containers/$container/config_version`"
         etcdctl set $etcdcontainerdir/config_version $config_version
         echo "etcdctl set $etcdcontainerdir/config_version $config_version"
-    elif [ "$method" = "azureblob" ]
-
     fi
 done
 etcdctl set /synchronizer/ready 1
