@@ -1,3 +1,7 @@
+# Find etcd
+ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
+export ETCDCTL_PEERS
+
 # Make sure the core package is up to date and set the ready key
 
 for container in `etcdctl ls /synchronizer/packages/core/containers`
