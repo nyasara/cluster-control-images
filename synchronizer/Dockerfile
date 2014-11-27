@@ -11,4 +11,4 @@ WORKDIR /working
 ENV ETCDCTL_PEERS http://172.17.42.1:4001
 
 # Run the watch script forever
-CMD ['/bin/bash', '/working/synchronizer.sh']
+CMD ["/bin/bash", "/working/synchronizer.sh"]

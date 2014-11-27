@@ -18,4 +18,4 @@ WORKDIR /working
 ENV ETCD_BASE_URL http://172.17.42.1:4001
 
 # Run the watch script forever
-CMD ['/bin/bash', '/working/etcd-watch.sh']
+CMD ["/bin/bash", "/working/etcd-watch.sh"]
