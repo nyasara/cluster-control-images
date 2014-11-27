@@ -16,7 +16,7 @@ while [ 1 ]
 do
     # Check the system for the kill signal indicating we should shut down
     killsignal=`etcdctl get /cluster/runstate`
-    if [ $killsignal -eq "1" ]
+    if [ $killsignal = "1" ]
     then
         break
     fi
