@@ -6,7 +6,7 @@ export ETCDCTL_PEERS
 
 # Make sure the core package is up to date and set the ready key
 
-etcdpackagedir="/synchronizer/packages/core/containers"
+set etcdpackagedir="/synchronizer/packages/core/containers"
 for container in `etcdctl ls $etcdpackagedir`
 do
     method=`etcdctl get $etcdpackagedir/$container/method`
