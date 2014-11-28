@@ -9,4 +9,4 @@ COPY synchronizer.sh /working/
 RUN chmod 750 /working/synchronizer.sh
 
 # Run the watch script forever
-CMD ["/bin/bash", "/working/synchronizer.sh"]
+CMD ["/bin/bash","/working/synchronizer.sh"]
