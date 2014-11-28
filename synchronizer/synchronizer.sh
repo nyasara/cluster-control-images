@@ -6,23 +6,23 @@ export ETCDCTL_PEERS
 
 # Make sure the core package is up to date and set the ready key
 
-set etcdpackagedir="/synchronizer/packages/core/containers"
+export etcdpackagedir="/synchronizer/packages/core/containers"
 for container in `etcdctl ls $etcdpackagedir`
 do
-    method=`etcdctl get $etcdpackagedir/$container/method`
+    export method=`etcdctl get $etcdpackagedir/$container/method`
     if [ "$method" = "git" ]
     then
-        etcdcontainerdir="$etcdpackagedir/$container"
+        export etcdcontainerdir="$etcdpackagedir/$container"
         echo "Get container $container via git in $etcdcontainerdir"
         git clone `etcdctl get $etcdcontainerdir/repo` core-$container
         echo "git clone `etcdctl get $etcdcontainerdir/repo` core-$container"
         cp -r core-$container/`etcdctl get $etcdcontainerdir/repopath` /srv/core/containers/$container
         echo "cp -r core-$container/`etcdctl get $etcdcontainerdir/repopath` /srv/core/containers/$container"
-        version=`cat /srv/core/containers/$container/container_version`
+        export version=`cat /srv/core/containers/$container/container_version`
         echo "version=`cat /srv/core/containers/$container/container_version`"
         echo "etcdctl set $etcdcontainerdir/container_version $container_version"
         etcdctl set $etcdcontainerdir/container_version $container_version
-        version=`cat /srv/core/containers/$container/config_version`
+        export version=`cat /srv/core/containers/$container/config_version`
         echo "version=`cat /srv/core/containers/$container/config_version`"
         etcdctl set $etcdcontainerdir/config_version $config_version
         echo "etcdctl set $etcdcontainerdir/config_version $config_version"
