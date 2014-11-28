@@ -5,7 +5,7 @@ RUN apt-get update \
     && mkdir /working
 
 COPY nginx.toml /etc/confd/conf.d/
-COPY nginx-watcher.sh /working/
+COPY run-forever.sh /working/
 
 CMD ["/bin/bash", "/working/run-forever.sh"]
 

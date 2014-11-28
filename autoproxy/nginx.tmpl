@@ -1,0 +1,11 @@
+{{ range $vhost := lsdir "/autoproxy/vhosts" }}
+    {{ range $port := lsdir "/autoproxy/vhosts/$vhost/ports" }}
+        {{ range $service := lsdir "/autoproxy/vhosts/$vhost/ports/$port/endpoints" }}
+            upstream {{ base $service }} {
+                {{ range $endpoint := lsdir "/autoproxy/vhosts/$vhost/ports/$port/endpoints/$service" }}
+                    server {{ getv "/autoproxy/vhosts/$vhost/ports/$port/endpoints/$service/$endpoint/address }};
+                {{ end }}
+            }
+        {{ end }}
+    {{ end }}
+{{ end }}
