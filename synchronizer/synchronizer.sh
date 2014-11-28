@@ -38,8 +38,8 @@ then
         # Find the path within the repo for this package
         export repopath=`etcdctl get $container/repopath`
         # Copy the stuff over
-        cp -r $repodir/$repopath/ /srv/core/containers/$containername
-        echo "cp -r $repodir/$repopath /srv/core/containers/$containername"
+        cp -r -T $repodir/$repopath/ /srv/core/containers/$containername/
+        echo "cp -r -T $repodir/$repopath /srv/core/containers/$containername"
         # Update the container version
         export version=`cat /srv/core/containers/$containername/container_version`
         echo "version=`cat /srv/core/containers/$containername/container_version`"
