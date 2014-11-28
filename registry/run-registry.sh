@@ -1,11 +1,15 @@
 #/bin/bash
 
+# Find etcd
+ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
+export ETCDCTL_PEERS
+
 set -eo pipefail
 
-confd -onetime
+confd -onetime -node=$ETCDCTL_PEERS
 
 docker-registry &
-confd &
+confd -node=$ETCDCTL_PEERS &
 CONFIG_FILE=`md5sum /docker-registry/config/registry-config.yml`
 echo $CONFIG_FILE
 while [ 1 ]
