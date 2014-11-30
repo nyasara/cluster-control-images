@@ -1,5 +1,8 @@
 FROM nyasara/docker-managementbase
 
+# Install Docker so we can build
+RUN curl -sSL https://get.docker.com/ubuntu/ | sh
+
 # Declare the volume for where the config will be
 VOLUME /etc/librarian
 WORKDIR /working
