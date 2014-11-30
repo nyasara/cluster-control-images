@@ -18,10 +18,7 @@ do
                     if [ "$OLDVAL" != "$value" ]
                     then
                         etcdctl set $key "$value"
-                        echo "Updated"
                     fi
-                    echo $key
-                    echo $value
                 done < /srv/$package/containers/$container/keys/$keyfile
             done
         done
