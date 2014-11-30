@@ -3,6 +3,7 @@
 # Find etcd
 ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
 export ETCDCTL_PEERS
+export HOST_IP="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`"
 
 while [ 1 ]
 do
@@ -43,8 +44,8 @@ do
             fi
 
             # We will use the image tag names a lot, and they're complicated, so...convenience variables
-            export LATEST_NAME="localhost:5001/$package/$container"
-            export TAG_NAME="localhost:5001/$package/$container:`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`"
+            export LATEST_NAME="$HOST_IP:5001/$package/$container"
+            export TAG_NAME="$HOST_IP:5001/$package/$container:`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`"
             # If we have to rebuild, rebuild
             docker build -t $LATEST_NAME /srv/$package/containers/$container/build
 
