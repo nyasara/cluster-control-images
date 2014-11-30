@@ -92,6 +92,14 @@ do
             # Figure out the directory that git will clone it into
             export repodir=`echo $repo | awk '{a=split($0, parts, "/"); print parts[a]}'`
 
+            # Update the repo if it's already pulled down so we can see if we need to update
+            if [ -d "$repodir" ]
+            then
+                cd $repodir
+                git pull $repo --branch $branch
+                cd ..
+            fi
+
             # See if that directory does not exist or the revision has changed
             if [ ! -d "$repodir" ] || [ "`etcdctl get $etcdpackagedir/revision`" != "`cd $repodir && git rev-parse $branch`" ]
             then
