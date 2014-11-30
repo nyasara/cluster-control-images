@@ -96,7 +96,7 @@ do
             if [ -d "$repodir" ]
             then
                 cd $repodir
-                git pull $repo --branch $branch
+                git pull $repo 
                 cd ..
             fi
 
