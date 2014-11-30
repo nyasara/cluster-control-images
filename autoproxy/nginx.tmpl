@@ -1,11 +1,22 @@
 {{ range $vhost := lsdir "/autoproxy/vhosts" }}
-    {{ range $port := lsdir "/autoproxy/vhosts/$vhost/ports" }}
-        {{ range $service := lsdir "/autoproxy/vhosts/$vhost/ports/$port/endpoints" }}
-            upstream {{ base $service }} {
-                {{ range $endpoint := lsdir "/autoproxy/vhosts/$vhost/ports/$port/endpoints/$service" }}
-                    server {{ getv "/autoproxy/vhosts/$vhost/ports/$port/endpoints/$service/$endpoint/address }};
+    {{ range $port := lsdir (printf "/autoproxy/vhosts/%s/ports" $vhost) }}
+        {{ range $service := lsdir (printf "/autoproxy/vhosts/%s/ports/%s/endpoints" $vhost $port) }}
+            upstream {{ print $service }} {
+                {{ range $endpoint := lsdir (printf "/autoproxy/vhosts/%s/ports/%s/endpoints/%s" $vhost $port $service) }}
+                    server {{ getv (printf "/autoproxy/vhosts/%s/ports/%s/endpoints/%s/%s/address" $vhost $port $service $endpoint) }};
                 {{ end }}
             }
         {{ end }}
+        server {
+            listen {{ print $port }};
+            server_name {{ print $vhost }};
+            {{ range $service := lsdir (printf "/autoproxy/vhosts/%s/ports/%s/endpoints" $vhost $port) }}
+            location {{ getv (printf "/autoproxy/vhosts/%s/ports/%s/endpoints/%s/path" $vhost $port $service) }} {
+                proxy_pass http://{{ print $service }};
+            }
+            {{ end }}
+        }
     {{ end }}
 {{ end }}
+
+

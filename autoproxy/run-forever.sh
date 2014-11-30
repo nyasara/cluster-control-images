@@ -12,5 +12,5 @@ service nginx start
 
 confd -node=$ETCDCTL_PEERS &
 
-tail -f /var/log/nginx/*.log
+tail -f /var/log/nginx/access.log
 
