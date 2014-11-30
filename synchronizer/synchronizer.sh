@@ -103,17 +103,14 @@ do
             # See if that directory does not exist or the revision has changed
             if [ ! -d "$repodir" ] || [ "`etcdctl get $etcdpackagedir/revision`" != "`cd $repodir && git rev-parse $branch`" ]
             then
-                # Remove the existing repo if it was there
-                if [ -d "$repodir" ]
+                # Clone the repo if it was missing
+                if [ ! -d "$repodir" ]
                 then 
-                    echo "Emptying $repodir"
-                    rm -rf $repodir
+                    # DO the clone
+                    echo "Get package $etcdpackagedir via git from $repo into $repodir"
+                    git clone --branch $branch $repo
+                    echo "git clone --branch $branch $repo"
                 fi
-
-                # DO the clone
-                echo "Get package $etcdpackagedir via git from $repo into $repodir"
-                git clone --branch $branch $repo
-                echo "git clone --branch $branch $repo"
 
                 # Update the revision ID in etcd
                 etcdctl set $etcdpackagedir/revision `cd $repodir && git rev-parse $branch`
