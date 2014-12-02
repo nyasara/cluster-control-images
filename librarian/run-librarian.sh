@@ -34,9 +34,11 @@ do
             # Try to pull from the local registry, and see if it failed
             if [ -z "`docker pull $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME`" ]
             then
+                echo "Trying main registry"
                 # If it failed, try to pull it from the main Docker Hub registry, then tag it for the local registry and push
                 docker pull $PARENT_IMAGE_NAME:$PARENT_TAG_NAME
             else
+                echo "Found it locally, retagging"
                 # If we did get it locally, tag it to remove the registry location 
                 docker tag $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME $PARENT_IMAGE_NAME:$PARENT_TAG_NAME
             fi
@@ -59,7 +61,7 @@ do
 
             # We will use the image tag names a lot, and they're complicated, so...convenience variables
             export LATEST_NAME="$REGISTRY_ADRESS/$package/$container"
-            tagnumber = `etcdctl get /synchronizer/packages/$package/containers/$container/container_version`
+            tagnumber=`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`
             export TAG_NAME="$REGISTRY_ADDRESS/$package/$container:$tagnumber"
             # If we have to rebuild, rebuild, not caching because of possible things that won't get done
             docker build -t --no-cache $LATEST_NAME /srv/$package/containers/$container/build
