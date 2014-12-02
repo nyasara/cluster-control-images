@@ -95,8 +95,9 @@ do
             # Update the repo if it's already pulled down so we can see if we need to update
             if [ -d "$repodir" ]
             then
+                echo "$repodir exists, doing a pull"
                 cd $repodir
-                git pull $repo 
+                git pull 
                 cd ..
             fi
 
