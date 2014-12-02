@@ -3,7 +3,7 @@
 # Find etcd
 ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
 export ETCDCTL_PEERS
-export REGISTRY_IP="`etcdctl get /registry/location`"
+export REGISTRY_ADDRESS="`etcdctl get /registry/location`"
 
 while [ 1 ]
 do
@@ -21,6 +21,8 @@ do
 
             export NEWEST_CONTAINER_VERSION="`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`"
             export PARENT_IMAGE_NAME="`cat /srv/$package/containers/$container/build/Dockerfile | grep ^FROM | awk '{print $2}'`"
+
+            # TODO - properly handle it if registry for the image is specified in the FROM lien
             if [ -z "`echo $PARENT_IMAGE_NAME | grep ':'`" ]
             then
                 export PARENT_TAG_NAME="latest"
@@ -28,6 +30,18 @@ do
                 export PARENT_TAG_NAME="`echo $PARENT_IMAGE_NAME | egrep -o :.+ | egrep -o [^:]+`"
                 export PARENT_IMAGE_NAME="`echo $PARENT_IMAGE_NAME | egrep -o [^:]: | egrep -o [^:]+`"
             fi
+
+            # Try to pull from the local registry, and see if it failed
+            if [ -z "`docker pull $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME`" ]
+            then
+                # If it failed, try to pull it from the main Docker Hub registry, then tag it for the local registry and push
+                docker pull $PARENT_IMAGE_NAME:$PARENT_TAG_NAME
+            else
+                # If we did get it locally, tag it to remove the registry location 
+                docker tag $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME $PARENT_IMAGE_NAME:$PARENT_TAG_NAME
+            fi
+
+            # Then save off the hash of the parent so we can check for changes to it later
             export PARENT_HASH="`docker images | grep $PARENT_IMAGE_NAME | grep $PARENT_TAG_NAME | awk '{print $3}'`"
 
             # Check the container version in synchronizer against what we last built
@@ -44,19 +58,20 @@ do
             fi
 
             # We will use the image tag names a lot, and they're complicated, so...convenience variables
-            export LATEST_NAME="$REGISTRY_IP/$package/$container"
-            export TAG_NAME="$REGISTRY_IP/$package/$container:`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`"
-            # If we have to rebuild, rebuild
-            docker build -t $LATEST_NAME /srv/$package/containers/$container/build
+            export LATEST_NAME="$REGISTRY_ADRESS/$package/$container"
+            tagnumber = `etcdctl get /synchronizer/packages/$package/containers/$container/container_version`
+            export TAG_NAME="$REGISTRY_ADDRESS/$package/$container:$tagnumber"
+            # If we have to rebuild, rebuild, not caching because of possible things that won't get done
+            docker build -t --no-cache $LATEST_NAME /srv/$package/containers/$container/build
 
             # Push to the registry as the latest tag
             docker push $LATEST_NAME
-            # Then also tag it with the container_version number
+            # Then also tag it with the container_version number and push
             docker tag $LATEST_NAME $TAG_NAME
             docker push $TAG_NAME
 
-            # And untag anything older
-            # TODO 
+            # And untag anything older (Just echoing for now)
+            docker images | grep "$package/$container" | grep -v latest | grep -v $tagnumber | awk '{print $2}' | while read oldtag; do echo "Would remove $package/$container:$oldtag"; done
 
             # Store the base hash in parent_hash
             etcdctl set /librarian/buildinfo/$package/$container/parent_hash $PARENT_HASH 
