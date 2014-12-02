@@ -64,7 +64,7 @@ do
             tagnumber=`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`
             export TAG_NAME="$REGISTRY_ADDRESS/$package/$container:$tagnumber"
             # If we have to rebuild, rebuild, not caching because of possible things that won't get done
-            docker build -t --no-cache $LATEST_NAME /srv/$package/containers/$container/build
+            docker build --no-cache -t $LATEST_NAME /srv/$package/containers/$container/build
 
             # Push to the registry as the latest tag
             docker push $LATEST_NAME
