@@ -22,15 +22,19 @@ do
             export NEWEST_CONTAINER_VERSION="`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`"
             export PARENT_IMAGE_NAME="`cat /srv/$package/containers/$container/build/Dockerfile | grep ^FROM | awk '{print $2}'`"
 
+            echo "$PARENT_IMAGE_NAME - image name"
             # TODO - properly handle it if registry for the image is specified in the FROM lien
             if [ -z "`echo $PARENT_IMAGE_NAME | grep ':'`" ]
             then
+                echo "Use tag latest"
                 export PARENT_TAG_NAME="latest"
-            else                
+            else                               
                 export PARENT_TAG_NAME="`echo $PARENT_IMAGE_NAME | egrep -o :.+ | egrep -o [^:]+`"
                 export PARENT_IMAGE_NAME="`echo $PARENT_IMAGE_NAME | egrep -o [^:]: | egrep -o [^:]+`"
+                echo "Use tag $PARENT_TAG_NAME $PARENT_IMAGE_NAME"
             fi
-
+            
+            echo "We='re going to try pulling $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME"
             # Try to pull from the local registry, and see if it failed
             if [ -z "`docker pull $REGISTRY_ADDRESS/$PARENT_IMAGE_NAME:$PARENT_TAG_NAME`" ]
             then
@@ -60,9 +64,10 @@ do
             fi
 
             # We will use the image tag names a lot, and they're complicated, so...convenience variables
-            export LATEST_NAME="$REGISTRY_ADRESS/$package/$container"
+            export LATEST_NAME="$REGISTRY_ADDRESS/$package/$container"
             tagnumber=`etcdctl get /synchronizer/packages/$package/containers/$container/container_version`
             export TAG_NAME="$REGISTRY_ADDRESS/$package/$container:$tagnumber"
+            echo "Name data $LATEST_NAME $tagnumber $TAG_NAME"
             # If we have to rebuild, rebuild, not caching because of possible things that won't get done
             docker build --no-cache -t $LATEST_NAME /srv/$package/containers/$container/build
 

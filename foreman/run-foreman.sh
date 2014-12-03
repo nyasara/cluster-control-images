@@ -32,7 +32,7 @@ do
                 for service in `ls /srv/$package/containers/$container/services`
                 do
                     # There is no unloading to do for an @ service, assume a scaler, and make the @ service depend on the scaler
-                    if [ -z "`grep \@ $service`" ]
+                    if [ -z "`grep \@ $service`" ] 
                     then
                         fleetctl unload $service
                     fi
@@ -43,14 +43,38 @@ do
                 for service in `ls /srv/$package/containers/$container/services`
                 do
                     fleetctl submit $service
-                    # If this is an instantiated service, (with an @), don't start it, assume a scaler who will take care of it
-                    if [ -z "`grep \@ $service`" ]
-                    then
-                        fleetctl start $service
-                    fi
                 done
             fi
 
+            # Then look in the deploy folder for information on how to run this thing (only needed for instantiated services)
+            # Execute deploy/deploy.sh to get info on how much to run and how
+            export $rundata=`/bin/sh deploy/deploy.sh`
+            if [ -n "`grep \@ $service`" ]
+            then
+                # An instantiated service runs a set of services as named
+                cat $rundata | while read instance
+                do
+                    # See if it is missing from a list of units, and if it is missing, instantiate it
+                    if [ -z "`fleetctl list-units | grep $instance`" ]
+                    then
+                        fleetctl start $instance
+                    fi
+                done
+            else
+                # A non-instantiated service either runs or doesnt'
+                if [ -n "$rundata" ]
+                then
+                    if [ -z "`fleetctl list-units | grep $service`" ]
+                    then
+                        fleetctl start $service
+                    fi
+                else
+                    if [ -n "`fleetctl list-units | grep $service`" ]
+                    then
+                        fleetctl stop $service
+                    fi
+                fi
+            fi
         done
     done      
 done
