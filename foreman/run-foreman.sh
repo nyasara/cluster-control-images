@@ -1,8 +1,8 @@
 #/bin/bash
 
 # Find etcd
-ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
-export ETCDCTL_PEERS
+# ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
+# export ETCDCTL_PEERS
 
 while [ 1 ]
 do
@@ -26,29 +26,29 @@ do
             export SERVICE_HASH="`cat $CONTAINER_DIR/services/* 2> /dev/null | md5sum -` | awk '{print $1}'"
             export CURRENT_SERVICE_HASH="`etcdctl ls /foreman/$package/$container/services_hash`"
             # If they are different
-            if [ $SERVICE_HASH != $CURRENT_SERVICE_HASH ]
+            if [ "$SERVICE_HASH" != "$CURRENT_SERVICE_HASH" ]
             then
                 # Unload and destroy each service
                 for service in `ls /srv/$package/containers/$container/services`
                 do
                     # There is no unloading to do for an @ service, assume a scaler, and make the @ service depend on the scaler
-                    if [ -z "`grep \@ $service`" ] 
+                    if [ -z "`grep "\@" $service`" ] 
                     then
                         fleetctl unload $service
                     fi
                     fleetctl destroy $service
                 done
 
-                # Submit and start each service
+                # Submit each service
                 for service in `ls /srv/$package/containers/$container/services`
                 do
-                    fleetctl submit $service
+                    fleetctl submit /srv/$pacakge/containers/$container/services/$service
                 done
             fi
 
             # Then look in the deploy folder for information on how to run this thing (only needed for instantiated services)
             # Execute deploy/deploy.sh to get info on how much to run and how
-            export $rundata=`/bin/sh deploy/deploy.sh`
+            export rundata=`/bin/sh deploy/deploy.sh`
             if [ -n "`grep \@ $service`" ]
             then
                 # An instantiated service runs a set of services as named
