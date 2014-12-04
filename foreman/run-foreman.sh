@@ -18,21 +18,25 @@ do
             fi
 
             export CONTAINER_DIR="/srv/$package/containers/$container"
+            echo "Container dir $CONTAINER_DIR"
 
             # If there is, foreman has two tasks
             # First, make sure the deployed image is the same version and hash as the most recent librarian build
 
             # Second, make sure there are no changes to the services
-            export SERVICE_HASH="`cat $CONTAINER_DIR/services/* 2> /dev/null | md5sum -` | awk '{print $1}'"
+            export SERVICE_HASH="`cat $CONTAINER_DIR/services/* | md5sum - | awk '{print $1}'`"
             export CURRENT_SERVICE_HASH="`etcdctl ls /foreman/$package/$container/services_hash`"
+            echo "$SERVICE_HASH - servic - $CURRENT_SERVICE_HASH"
             # If they are different
             if [ "$SERVICE_HASH" != "$CURRENT_SERVICE_HASH" ]
             then
+                echo "Reload services"
                 # Unload and destroy each service
                 for service in `ls /srv/$package/containers/$container/services`
                 do
+                    echo "Destroy $service"
                     # There is no unloading to do for an @ service, assume a scaler, and make the @ service depend on the scaler
-                    if [ -z "`grep "\@" $service`" ] 
+                    if [ -z "`echo $service | grep \"\@\"`" ] 
                     then
                         fleetctl unload $service
                     fi
@@ -42,39 +46,54 @@ do
                 # Submit each service
                 for service in `ls /srv/$package/containers/$container/services`
                 do
-                    fleetctl submit /srv/$pacakge/containers/$container/services/$service
+                    echo "Create $service"
+                    fleetctl submit /srv/$package/containers/$container/services/$service
                 done
             fi
 
             # Then look in the deploy folder for information on how to run this thing (only needed for instantiated services)
             # Execute deploy/deploy.sh to get info on how much to run and how
-            export rundata=`/bin/sh deploy/deploy.sh`
-            if [ -n "`grep \@ $service`" ]
-            then
-                # An instantiated service runs a set of services as named
-                cat $rundata | while read instance
-                do
-                    # See if it is missing from a list of units, and if it is missing, instantiate it
-                    if [ -z "`fleetctl list-units | grep $instance`" ]
-                    then
-                        fleetctl start $instance
-                    fi
-                done
-            else
-                # A non-instantiated service either runs or doesnt'
-                if [ -n "$rundata" ]
+            for service in `ls /srv/$package/containers/$container/services`
+            do
+                echo "Figure out how many $service to run"
+                export rundata="`/bin/sh /srv/$package/containers/$container/deploy/deploy-$service.sh`"
+                echo "$rundata - rundata"
+                echo "$service - export service"
+                if [ -n "`echo $service | grep \"\@\"`" ]
                 then
-                    if [ -z "`fleetctl list-units | grep $service`" ]
-                    then
-                        fleetctl start $service
-                    fi
+                    echo "Instantiated"
+                    # An instantiated service runs a set of services as named
+                    cat $rundata | while read instance
+                    do
+                        # See if it is missing from a list of units, and if it is missing, instantiate it
+                        if [ -z "`fleetctl list-units | grep $instance`" ]
+                        then
+                            fleetctl start $instance
+                        fi
+                    done
                 else
-                    if [ -n "`fleetctl list-units | grep $service`" ]
+                    echo "Single or global"
+                    # A non-instantiated service either runs or doesnt'
+                    if [ -n "$rundata" ]
                     then
-                        fleetctl stop $service
+                        echo "Is not running"
+                        if [ -z "`fleetctl list-units | grep $service`" ]
+                        then 
+                            echo "Needs to run"
+                            fleetctl start $service
+                        fi
+                    else
+                        echo "Is running"
+                        if [ -n "`fleetctl list-units | grep $service`" ]
+                        then
+                            echo "Needs to stop"
+                            fleetctl stop $service
+                        fi
                     fi
                 fi
-            fi
+            done
         done
-    done      
+    done
+    echo "Sleeping"
+    sleep 60
 done
