@@ -23,9 +23,10 @@ do
             # If there is, foreman has two tasks
             # First, make sure the deployed image is the same version and hash as the most recent librarian build
 
+
             # Second, make sure there are no changes to the services
             export SERVICE_HASH="`cat $CONTAINER_DIR/services/* | md5sum - | awk '{print $1}'`"
-            export CURRENT_SERVICE_HASH="`etcdctl ls /foreman/$package/$container/services_hash`"
+            export CURRENT_SERVICE_HASH="`etcdctl ls /foreman/deploy/$package/$container/services_hash`"
             echo "$SERVICE_HASH - servic - $CURRENT_SERVICE_HASH"
             # If they are different
             if [ "$SERVICE_HASH" != "$CURRENT_SERVICE_HASH" ]
@@ -68,7 +69,8 @@ do
                         # See if it is missing from a list of units, and if it is missing, instantiate it
                         if [ -z "`fleetctl list-units | grep $instance`" ]
                         then
-                            fleetctl start $instance
+                            # Can't block, because some services will wait for others
+                            fleetctl starti --no-block $instance
                         fi
                     done
                 else
@@ -79,8 +81,9 @@ do
                         echo "Is not running"
                         if [ -z "`fleetctl list-units | grep $service`" ]
                         then 
+                            # Can't block, because some services will wait for others
                             echo "Needs to run"
-                            fleetctl start $service
+                            fleetctl start --no-block $service
                         fi
                     else
                         echo "Is running"
@@ -92,6 +95,8 @@ do
                     fi
                 fi
             done
+            # Update the deployed hashes
+            etcdctl set /foreman/deploy/$package/$container/services_hash "$SERVICE_HASH"
         done
     done
     echo "Sleeping"
