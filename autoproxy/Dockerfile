@@ -2,7 +2,7 @@ FROM nyasara/docker-managementbase
 
 RUN apt-get update \
     && apt-get install -yq nginx \
-    && mkdir /working
+    && mkdir /working \
     && rm /etc/nginx/sites-enabled/default
 
 COPY nginx.toml /etc/confd/conf.d/
