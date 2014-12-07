@@ -9,14 +9,11 @@
         {{ end }}
         server {
             listen {{ print $port }};
-            server_name {{ print $vhost }};
             {{ range $service := lsdir (printf "/autoproxy/vhosts/%s/ports/%s/endpoints" $vhost $port) }}
-            location {{ getv (printf "/autoproxy/vhosts/%s/ports/%s/endpoints/%s/path" $vhost $port $service) }} {
+            location {{ getv (printf "/autoproxy/vhosts/%s/ports/%s/endpoints/%s/path" $vhost $port $service) }}/ {
                 proxy_pass http://{{ print $service }}/;
             }
             {{ end }}
         }
-    {{ end }}
 {{ end }}
-
-
+{{ end }}                                                                                      
