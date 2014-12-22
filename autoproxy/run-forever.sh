@@ -4,7 +4,7 @@
 ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
 export ETCDCTL_PEERS
 
-confd -onetime -node=$ETCDCTL_PEERS
+confd -onetime -node=$ETCDCTL_PEERS -interval=120
 
 service nginx start 
 
