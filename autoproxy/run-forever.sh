@@ -8,7 +8,15 @@ confd -onetime -node=$ETCDCTL_PEERS -interval=120
 
 service nginx start 
 
-confd -node=$ETCDCTL_PEERS &
+trap "confd -onetime -node=$ETCDCTL_PEERS" SIGHUP
+trap "exit" SIGTERM SIGINT
 
-tail -f /var/log/nginx/*.log
+confd -node=$ETCDCTL_PEERS -interval=120 &
+
+while [ 1 ]
+do
+    sleep 60
+done
+
+# tail -f /var/log/nginx/*.log
 
