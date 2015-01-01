@@ -4,14 +4,14 @@
 # ETCDCTL_PEERS="`route -n | grep ^0\.0\.0\.0 | awk '{ print $2 }'`:4001"
 # export ETCDCTL_PEERS
 
-confd -onetime -node=$ETCDCTL_PEERS -interval=120
+confd -onetime -node=$ETCD_PEERS -interval=120
 
 service nginx start 
 
-trap "confd -onetime -node=$ETCDCTL_PEERS" SIGHUP
+trap "confd -onetime -node=$ETCD_PEERS" SIGHUP
 trap "exit" SIGTERM SIGINT
 
-confd -node=$ETCDCTL_PEERS -interval=120 &
+confd -node=$ETCD_PEERS -interval=120 &
 
 while [ 1 ]
 do
